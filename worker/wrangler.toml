@@ -1,0 +1,17 @@
+name = "frieda-image-upload"
+main = "src/index.js"
+compatibility_date = "2026-09-08"
+
+[[r2_buckets]]
+binding = "IMAGES_BUCKET"
+bucket_name = "frieda-images"
+
+[vars]
+# Public URL the R2 bucket is reachable at (custom domain connected to the bucket,
+# or the default r2.dev URL while you set that up).
+PUBLIC_BASE_URL = "https://images.frieda.example.com"
+# The deployed frontend's origin, for CORS.
+ALLOWED_ORIGIN = "https://frieda.vercel.app"
+
+# Set via `wrangler secret put UPLOAD_SECRET` — never committed here.
+# The app sends it as: Authorization: Bearer <secret>
