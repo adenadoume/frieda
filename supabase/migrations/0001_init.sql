@@ -3,14 +3,14 @@
 
 -- ─────────────────────────────────────────────────────────────
 -- Access control: only emails listed here may read/write anything.
--- Add your brother's email here once you have it (see bottom of file).
 -- ─────────────────────────────────────────────────────────────
 create table if not exists allowed_users (
   email text primary key
 );
 
 insert into allowed_users (email) values
-  ('agop.pro@gmail.com')
+  ('agop.pro@gmail.com'),
+  ('pagopian@gmail.com')
 on conflict (email) do nothing;
 
 -- RLS on, no policies: no client (anon or authenticated) can read/write this
@@ -164,7 +164,3 @@ alter table medical_exams enable row level security;
 create policy "allowed users full access" on medical_exams
   for all using (is_allowed_user()) with check (is_allowed_user());
 
--- ─────────────────────────────────────────────────────────────
--- IMPORTANT: add your brother's email before he tries to log in.
---   insert into allowed_users (email) values ('brother@example.com');
--- ─────────────────────────────────────────────────────────────

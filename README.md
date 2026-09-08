@@ -16,14 +16,10 @@ to this app and RLS-gated to `allowed_users`, so it's safe to run alongside
 whatever else lands in that project later.
 
 1. In the SQL editor, run `supabase/migrations/0001_init.sql`. This creates all
-   tables, RLS policies (only emails in `allowed_users` can read/write anything),
-   and seeds the current shopping list / medications / ΚΕΠΑ items / the first
-   expense.
-2. **Add your brother's email** — run:
-   ```sql
-   insert into allowed_users (email) values ('his-email@example.com');
-   ```
-3. Settings → API → copy the Project URL and `anon` public key into `.env`
+   tables, RLS policies (only emails in `allowed_users` can read/write anything —
+   both your and your brother's emails are already seeded in there), and seeds
+   the current shopping list / medications / ΚΕΠΑ items / the first expense.
+2. Settings → API → copy the Project URL and `anon` public key into `.env`
    (copy `.env.example` → `.env` first).
 
 ## 2. Google sign-in
