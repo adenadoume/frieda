@@ -10,17 +10,20 @@ Seagonia admin app.
 
 ## 1. Supabase project
 
-1. Create a **new** Supabase project (recommended: separate from `agop-os`, same
-   account is fine — keeps your brother's access scoped to just this app).
-2. In the SQL editor, run `supabase/migrations/0001_init.sql`. This creates all
+Using the existing **agop-os** Supabase project (confirmed it only holds a
+keepalive project so far — no conflict). All tables below are namespaced/unique
+to this app and RLS-gated to `allowed_users`, so it's safe to run alongside
+whatever else lands in that project later.
+
+1. In the SQL editor, run `supabase/migrations/0001_init.sql`. This creates all
    tables, RLS policies (only emails in `allowed_users` can read/write anything),
    and seeds the current shopping list / medications / ΚΕΠΑ items / the first
    expense.
-3. **Add your brother's email** — run:
+2. **Add your brother's email** — run:
    ```sql
    insert into allowed_users (email) values ('his-email@example.com');
    ```
-4. Settings → API → copy the Project URL and `anon` public key into `.env`
+3. Settings → API → copy the Project URL and `anon` public key into `.env`
    (copy `.env.example` → `.env` first).
 
 ## 2. Google sign-in
