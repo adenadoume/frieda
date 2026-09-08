@@ -13,11 +13,19 @@ insert into allowed_users (email) values
   ('agop.pro@gmail.com')
 on conflict (email) do nothing;
 
--- Helper used by every RLS policy below.
+-- RLS on, no policies: no client (anon or authenticated) can read/write this
+-- table directly via the API. Only is_allowed_user() below can see it, since
+-- it's security definer.
+alter table allowed_users enable row level security;
+
+-- Helper used by every RLS policy below. security definer so it can read
+-- allowed_users even though clients themselves can't.
 create or replace function is_allowed_user()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1 from allowed_users
