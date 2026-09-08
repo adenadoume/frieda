@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { useAuth } from "../hooks/useAuth";
+import { useUser } from "@clerk/clerk-react";
+import { useSupabaseClient } from "../hooks/useSupabaseClient";
 
 export default function Shopping() {
-  const { user } = useAuth();
+  const { user } = useUser();
+  const supabase = useSupabaseClient();
   const [items, setItems] = useState([]);
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
@@ -20,12 +21,14 @@ export default function Shopping() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [supabase]);
 
   async function addItem(e) {
     e.preventDefault();
     if (!title.trim()) return;
-    await supabase.from("shopping_items").insert({ title: title.trim(), created_by: user.email });
+    await supabase
+      .from("shopping_items")
+      .insert({ title: title.trim(), created_by: user.primaryEmailAddress?.emailAddress });
     setTitle("");
     load();
   }

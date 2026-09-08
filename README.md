@@ -2,11 +2,12 @@
 
 Shared app for coordinating mother's care — shopping list, expenses (with receipt
 photos), medications, ΚΕΠΑ procedure, pension/allowance tracking, and medical exams.
-Two logins only: you and your brother, via Google sign-in.
+Two logins only: you and your brother, via Google sign-in (through Clerk).
 
-Stack: Vite + React (plain JS, no framework), Tailwind, Supabase (Postgres + Auth),
-Cloudflare Worker + R2 for photo storage, deployed on Vercel. Same pattern as the
-Seagonia admin app.
+Stack: Vite + React (plain JS, no framework), Tailwind, Clerk (auth) + Supabase
+(Postgres, via Supabase's official Clerk third-party-auth integration for RLS),
+Cloudflare Worker + R2 for photo storage, deployed on Vercel. DB/storage pattern
+mirrors the Seagonia admin app; auth is Clerk instead of Supabase Auth.
 
 ## 1. Supabase project
 
@@ -22,19 +23,41 @@ whatever else lands in that project later.
 2. Settings → API → copy the Project URL and `anon` public key into `.env`
    (copy `.env.example` → `.env` first).
 
-## 2. Google sign-in
+## 2. Auth — Clerk + Google, wired into Supabase
 
-1. In Supabase: Authentication → Providers → Google → enable it.
-2. In [Google Cloud Console](https://console.cloud.google.com/): create a project
-   (free), then APIs & Services → OAuth consent screen (External, testing mode is
-   fine for just the two of you) → Credentials → Create OAuth client ID
-   (Web application).
-   - Authorized redirect URI: the one Supabase shows you on the Google provider
-     screen (`https://<project-ref>.supabase.co/auth/v1/callback`).
-3. Paste the Google Client ID + Secret into Supabase's Google provider settings.
-4. Add both your Google accounts as **test users** on the OAuth consent screen
-   (required while it's in "Testing" mode — no verification/review needed for 2
-   people).
+Auth is Clerk, not Supabase Auth. Clerk provides its own shared Google connection,
+so **no Google Cloud Console project is needed** for this.
+
+**A. Clerk dashboard** (clerk.com — free tier is plenty for 2 users)
+1. Create an application (e.g. "Frieda Care").
+2. **User & Authentication → Social Connections** → enable **Google** (Clerk's
+   built-in shared credentials — no setup needed on Google's side).
+3. **User & Authentication → Email, Phone, Username** → turn off email/password
+   and any other sign-in method, so Google is the only option shown.
+4. **Sessions → Customize session token** → add a claim so Supabase's RLS can see
+   the user's email:
+   ```json
+   { "email": "{{user.primary_email_address}}" }
+   ```
+5. **API Keys** → copy the **Publishable key** into `.env` as
+   `VITE_CLERK_PUBLISHABLE_KEY`. Also note the **Frontend API URL** shown there
+   (looks like `https://xxx.clerk.accounts.dev`, or your custom domain) — you'll
+   need it in the next step.
+
+**B. Supabase dashboard**
+6. **Authentication → Sign In / Providers → Third Party Auth** → Add provider →
+   **Clerk** → paste the Frontend API URL from step 5. This lets Supabase verify
+   Clerk's JWTs (via Clerk's public JWKS) without any shared secret.
+7. That's it on the Supabase side — `is_allowed_user()` in the migration already
+   reads `auth.jwt() ->> 'email'`, which now comes from Clerk's token.
+
+**C. Test users**
+8. While the app isn't "published" beyond your Clerk application's own user list,
+   sign-in is open to anyone with a Google account by default — restriction to
+   just the two of you happens at the app/DB level via `allowed_users`, not at
+   Clerk's level. (If you want Clerk itself to also gate sign-up, Clerk →
+   Restrictions → allowlist by email — optional, since `allowed_users` + RLS
+   already enforce it.)
 
 ## 3. Image uploads (Cloudflare Worker + R2)
 
@@ -67,9 +90,14 @@ npm run dev
 ## 5. Deploy
 
 Push to `github.com/adenadoume/frieda`, then import the repo in Vercel. Framework
-preset: Vite. Add the four `VITE_*` env vars from `.env` in Vercel's project
-settings. Once deployed, go back and set `ALLOWED_ORIGIN` in `worker/wrangler.toml`
-to the real Vercel URL and re-run `wrangler deploy`.
+preset: Vite. Add the five `VITE_*` env vars from `.env` in Vercel's project
+settings (`VITE_CLERK_PUBLISHABLE_KEY`, `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY`, `VITE_UPLOAD_WORKER_URL`, `VITE_UPLOAD_SECRET`). Once
+deployed:
+- Add the Vercel URL to Clerk → **Domains** (and as an authorized origin if it
+  asks) so sign-in works from production, not just localhost.
+- Set `ALLOWED_ORIGIN` in `worker/wrangler.toml` to the real Vercel URL and
+  re-run `wrangler deploy`.
 
 ## Notes
 

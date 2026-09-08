@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { useAuth } from "../hooks/useAuth";
+import { useUser } from "@clerk/clerk-react";
+import { useSupabaseClient } from "../hooks/useSupabaseClient";
 import { uploadImage } from "../lib/uploadImage";
 
 const empty = { description: "", amount: "", category: "", expense_date: "" };
 
 export default function Expenses() {
-  const { user } = useAuth();
+  const { user } = useUser();
+  const supabase = useSupabaseClient();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [file, setFile] = useState(null);
@@ -21,7 +22,7 @@ export default function Expenses() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [supabase]);
 
   async function addExpense(e) {
     e.preventDefault();
@@ -43,7 +44,7 @@ export default function Expenses() {
       amount: Number(form.amount),
       category: form.category.trim() || null,
       expense_date: form.expense_date || new Date().toISOString().slice(0, 10),
-      paid_by: user.email,
+      paid_by: user.primaryEmailAddress?.emailAddress,
       receipt_url,
     });
     setForm(empty);

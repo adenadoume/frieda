@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { useSupabaseClient } from "../hooks/useSupabaseClient";
 import { uploadImage } from "../lib/uploadImage";
 
 const empty = { exam_date: "", doctor: "", place: "", notes: "", follow_up_date: "" };
 
 export default function MedicalExams() {
+  const supabase = useSupabaseClient();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [file, setFile] = useState(null);
@@ -19,7 +20,7 @@ export default function MedicalExams() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [supabase]);
 
   async function addExam(e) {
     e.preventDefault();

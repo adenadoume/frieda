@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useUser, useClerk } from "@clerk/clerk-react";
 
 const NAV = [
   { to: "/", label: "Shopping", end: true },
@@ -11,7 +11,8 @@ const NAV = [
 ];
 
 export default function Layout() {
-  const { user, signOut } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <div className="min-h-screen bg-slate-900 flex">
@@ -38,8 +39,8 @@ export default function Layout() {
           ))}
         </nav>
         <div className="px-5 py-4 border-t border-slate-800 text-xs text-slate-500">
-          <p className="truncate mb-2">{user?.email}</p>
-          <button className="btn-secondary w-full" onClick={signOut}>
+          <p className="truncate mb-2">{user?.primaryEmailAddress?.emailAddress}</p>
+          <button className="btn-secondary w-full" onClick={() => signOut()}>
             Sign out
           </button>
         </div>
