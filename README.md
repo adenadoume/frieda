@@ -6,8 +6,11 @@ Two logins only: you and your brother, via Google sign-in (through Clerk).
 
 Stack: Vite + React (plain JS, no framework), Tailwind, Clerk (auth) + Supabase
 (Postgres, via Supabase's official Clerk third-party-auth integration for RLS),
-Cloudflare Worker + R2 for photo storage, deployed on Vercel. DB/storage pattern
-mirrors the Seagonia admin app; auth is Clerk instead of Supabase Auth.
+Cloudflare Pages (hosting) + Cloudflare Worker + R2 (photo storage) — everything
+on one Cloudflare account. DB/storage pattern mirrors the Seagonia admin app;
+auth is Clerk instead of Supabase Auth, hosting is Cloudflare Pages instead of
+Vercel (no strong reason for Vercel here, and this consolidates with the R2/Worker
+setup already in place).
 
 ## 1. Supabase project
 
@@ -74,8 +77,8 @@ Update `worker/wrangler.toml`:
 - `PUBLIC_BASE_URL` — connect a custom domain to the R2 bucket (Cloudflare
   dashboard → R2 → frieda-images → Settings → Custom domain), or use the
   `.r2.dev` public URL it gives you to start.
-- `ALLOWED_ORIGIN` — your deployed frontend's URL (Vercel gives you this after
-  step 4).
+- `ALLOWED_ORIGIN` — your deployed frontend's URL (Cloudflare Pages gives you
+  this after step 5, e.g. `https://frieda.pages.dev` or a custom domain).
 
 Put the worker URL + the same `UPLOAD_SECRET` into `.env` as
 `VITE_UPLOAD_WORKER_URL` / `VITE_UPLOAD_SECRET`.
@@ -87,17 +90,31 @@ npm install
 npm run dev
 ```
 
-## 5. Deploy
+## 5. Deploy (Cloudflare Pages)
 
-Push to `github.com/adenadoume/frieda`, then import the repo in Vercel. Framework
-preset: Vite. Add the five `VITE_*` env vars from `.env` in Vercel's project
-settings (`VITE_CLERK_PUBLISHABLE_KEY`, `VITE_SUPABASE_URL`,
-`VITE_SUPABASE_ANON_KEY`, `VITE_UPLOAD_WORKER_URL`, `VITE_UPLOAD_SECRET`). Once
-deployed:
-- Add the Vercel URL to Clerk → **Domains** (and as an authorized origin if it
-  asks) so sign-in works from production, not just localhost.
-- Set `ALLOWED_ORIGIN` in `worker/wrangler.toml` to the real Vercel URL and
-  re-run `wrangler deploy`.
+Code's already pushed to `github.com/adenadoume/frieda`.
+
+1. Cloudflare dashboard → **Workers & Pages → Create → Pages → Connect to Git**
+   → pick the `adenadoume/frieda` repo.
+2. Build settings:
+   - Framework preset: **Vite**
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+   - Root directory: leave as `/` (the app is at the repo root; `worker/` is
+     ignored by this build — it's deployed separately with `wrangler deploy`)
+3. Add the five `VITE_*` env vars under **Settings → Environment variables**
+   (`VITE_CLERK_PUBLISHABLE_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+   `VITE_UPLOAD_WORKER_URL`, `VITE_UPLOAD_SECRET`).
+4. Deploy. You'll get a `*.pages.dev` URL (or attach a custom domain).
+5. Once deployed:
+   - Add that URL to Clerk → **Domains** so sign-in works from production, not
+     just localhost.
+   - Set `ALLOWED_ORIGIN` in `worker/wrangler.toml` to the real Pages URL and
+     re-run `wrangler deploy` (from `worker/`).
+
+The `public/_redirects` file (`/* /index.html 200`) handles client-side routing
+so refreshing on e.g. `/expenses` doesn't 404 — Cloudflare Pages picks it up
+automatically from the build output.
 
 ## Notes
 
