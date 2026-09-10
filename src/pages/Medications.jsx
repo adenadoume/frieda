@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useSupabaseClient } from "../hooks/useSupabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 const empty = { name: "", dose: "", schedule: "", notes: "" };
 
 export default function Medications() {
-  const supabase = useSupabaseClient();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(true);
@@ -21,7 +20,7 @@ export default function Medications() {
 
   useEffect(() => {
     load();
-  }, [supabase]);
+  }, []);
 
   async function addMed(e) {
     e.preventDefault();

@@ -1,12 +1,9 @@
-import { useUser, SignInButton, useClerk } from "@clerk/clerk-react";
-import { useAllowed } from "../hooks/useAllowed";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
-  const { isSignedIn, user } = useUser();
-  const { allowed } = useAllowed();
-  const { signOut } = useClerk();
+  const { signInWithGoogle, session, allowed } = useAuth();
 
-  const deniedButSignedIn = isSignedIn && allowed === false;
+  const deniedButSignedIn = session && allowed === false;
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
@@ -16,19 +13,14 @@ export default function Login() {
 
         <div className="card p-8 space-y-4">
           {deniedButSignedIn ? (
-            <>
-              <p className="text-red-400 text-sm">
-                Signed in as {user.primaryEmailAddress?.emailAddress}, but this account isn't on the allowed list.
-                Ask for it to be added.
-              </p>
-              <button className="btn-secondary w-full" onClick={() => signOut()}>
-                Sign out
-              </button>
-            </>
+            <p className="text-red-400 text-sm">
+              Signed in as {session.user.email}, but this account isn't on the allowed list.
+              Ask for it to be added.
+            </p>
           ) : (
-            <SignInButton mode="redirect" forceRedirectUrl="/">
-              <button className="btn-primary w-full">Sign in with Google</button>
-            </SignInButton>
+            <button className="btn-primary w-full" onClick={signInWithGoogle}>
+              Sign in with Google
+            </button>
           )}
         </div>
       </div>

@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useSupabaseClient } from "../hooks/useSupabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 const empty = { title: "", content: "", amount: "" };
 
 export default function Pension() {
-  const supabase = useSupabaseClient();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(true);
@@ -17,7 +16,7 @@ export default function Pension() {
 
   useEffect(() => {
     load();
-  }, [supabase]);
+  }, []);
 
   async function addNote(e) {
     e.preventDefault();

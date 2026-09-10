@@ -1,16 +1,14 @@
 import { Navigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
-import { useAllowed } from "../hooks/useAllowed";
+import { useAuth } from "../hooks/useAuth";
 
 export default function ProtectedRoute({ children }) {
-  const { isLoaded, isSignedIn } = useUser();
-  const { allowed, loading } = useAllowed();
+  const { session, allowed, loading } = useAuth();
 
-  if (!isLoaded || (isSignedIn && loading)) {
+  if (loading) {
     return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-slate-400">Loading…</div>;
   }
 
-  if (!isSignedIn || allowed !== true) {
+  if (!session || allowed !== true) {
     return <Navigate to="/login" replace />;
   }
 

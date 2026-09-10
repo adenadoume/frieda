@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { useSupabaseClient } from "../hooks/useSupabaseClient";
+import { supabase } from "../lib/supabaseClient";
 
 const empty = { title: "", content: "", status: "todo", due_date: "" };
 const STATUSES = ["todo", "in_progress", "done"];
 const STATUS_LABEL = { todo: "To do", in_progress: "In progress", done: "Done" };
 
 export default function Kepa() {
-  const supabase = useSupabaseClient();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [loading, setLoading] = useState(true);
@@ -19,7 +18,7 @@ export default function Kepa() {
 
   useEffect(() => {
     load();
-  }, [supabase]);
+  }, []);
 
   async function addStep(e) {
     e.preventDefault();
